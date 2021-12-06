@@ -34,3 +34,6 @@
 virus_kryteria.txt
 virus_tresc.txt
 .idea/
+CMakeLists.txt
+examples.cpp
+cmake-build-debug
