@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+virus_kryteria.txt
+virus_tresc.txt
+.idea/
