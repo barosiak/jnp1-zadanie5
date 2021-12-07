@@ -26,7 +26,7 @@ private:
 };
 
 //TODO BASIA:
-//TODO MIESZKO:
+//TODO MIESZKO: wyjąteczki
 //CIEKAWE: iterator 1, iterator 2, get_parents, create, connect, remove (strong)
 //DONE:
 
