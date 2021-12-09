@@ -4,22 +4,23 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <stdexcept>
 
 // PYTANIE: czy te virtual są dobrze użyte?
 
-struct VirusAlreadyCreated : public virtual std::exception {
+struct VirusAlreadyCreated : public virtual std::invalid_argument {
     virtual const char *what() const noexcept {
         return "VirusAlreadyCreated";
     }
 };
 
-struct VirusNotFound : public virtual std::exception {
+struct VirusNotFound : public virtual std::invalid_argument {
     virtual const char *what() const noexcept {
         return "VirusNotFound";
     }
 };
 
-struct TriedToRemoveStemVirus : public virtual std::exception {
+struct TriedToRemoveStemVirus : public virtual std::invalid_argument {
     virtual const char *what() const noexcept {
         return "TriedToRemoveStemVirus";
     }
