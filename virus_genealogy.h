@@ -9,21 +9,15 @@
 // PYTANIE: czy te virtual są dobrze użyte?
 
 struct VirusAlreadyCreated : public virtual std::invalid_argument {
-    virtual const char *what() const noexcept {
-        return "VirusAlreadyCreated";
-    }
+    VirusAlreadyCreated() : std::invalid_argument("VirusAlreadyCreated") {};
 };
 
 struct VirusNotFound : public virtual std::invalid_argument {
-    virtual const char *what() const noexcept {
-        return "VirusNotFound";
-    }
+    VirusNotFound() : std::invalid_argument("VirusNotFound") {};
 };
 
 struct TriedToRemoveStemVirus : public virtual std::invalid_argument {
-    virtual const char *what() const noexcept {
-        return "TriedToRemoveStemVirus";
-    }
+    TriedToRemoveStemVirus() : std::invalid_argument("TriedToRemoveStemVirus") {};
 };
 
 //to bym ukryła
@@ -63,12 +57,12 @@ public:
 
     const Virus& operator[](Virus::id_type const &id) const {
         try {
-            return viruses[id]->virus;
-        } catch(std::out_of_range) {
+            return viruses.at(id)->virus;
+        } catch(const std::out_of_range&) {
             /* PYTANIE: Czy tak jest ok? Nasze metody mają rzucać dalej wszystkie
             wyjątki od wirusów, czy można założyć, że wirus nie rzuci 
             std::out_of_range, które my weźmiemy za rzucone przez mapę? */
-            throw new VirusNotFound();
+            throw VirusNotFound{};
         }
     }
 
