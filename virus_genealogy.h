@@ -55,6 +55,23 @@ public:
         return stem_node->virus.get_id();
     }
 
+    bool exists(Virus::id_type const &id) const {
+        /* nie zmieniamy stanu naszej klasy, więc żaden wyjątek nam nie
+        zaszkodzi */
+        return viruses.contains(id);
+    }
+
+    const Virus& operator[](Virus::id_type const &id) const {
+        try {
+            return viruses[id]->virus;
+        } catch(std::out_of_range) {
+            /* PYTANIE: Czy tak jest ok? Nasze metody mają rzucać dalej wszystkie
+            wyjątki od wirusów, czy można założyć, że wirus nie rzuci 
+            std::out_of_range, które my weźmiemy za rzucone przez mapę? */
+            throw new VirusNotFound();
+        }
+    }
+
 private:
     std::shared_ptr<VirusNode<Virus>> stem_node;
     std::map<typename Virus::id_type, std::shared_ptr<VirusNode<Virus>>> viruses;
