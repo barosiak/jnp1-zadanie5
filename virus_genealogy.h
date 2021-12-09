@@ -1,5 +1,5 @@
-#ifndef JNP1_ZADANIE5_VIRUS_GENEALOGY_H
-#define JNP1_ZADANIE5_VIRUS_GENEALOGY_H
+#ifndef VIRUS_GENEALOGY_H
+#define VIRUS_GENEALOGY_H
 
 #include <map>
 #include <vector>
@@ -65,4 +65,4 @@ private:
 //CIEKAWE: iterator 1, iterator 2, get_parents, create, connect, remove (strong)
 //DONE: wyjąteczki
 
-#endif //JNP1_ZADANIE5_VIRUS_GENEALOGY_H
+#endif // VIRUS_GENEALOGY_H
