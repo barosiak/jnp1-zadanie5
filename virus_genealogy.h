@@ -28,14 +28,14 @@ public:
     std::vector<std::shared_ptr<VirusNode<Virus>>> children;
     std::vector<std::weak_ptr<VirusNode<Virus>>> parents;
 
-    VirusNode(typename Virus::id_type const &id) : virus(id) {};
+    VirusNode(Virus::id_type const &id) : virus(id) {};
 private:
 };
 
 template <typename Virus>
 class VirusGenealogy {
 public:
-    VirusGenealogy(typename Virus::id_type const &stem_id) {
+    VirusGenealogy(Virus::id_type const &stem_id) {
         stem_node = std::make_shared<VirusNode<Virus>>(stem_id);
         /* Jeżeli poniżej poleci wyjątek, to będzie ok, bo pamięć zaalokowana
         na stem_node się zwolni automatycznie dzięki użyciu shared_ptr 
