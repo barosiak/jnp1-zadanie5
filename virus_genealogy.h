@@ -43,6 +43,11 @@ public:
         viruses[stem_id] = stem_node;
     }
 
+    /* oba poniższe to wymóg treści zadania */
+    VirusGenealogy(VirusGenealogy const &) = delete;
+
+    VirusGenealogy &operator=(VirusGenealogy const &) = delete;
+
     Virus::id_type get_stem_id() const {
         /* nie zmieniamy stanu naszej klasy, więc żaden wyjątek nam nie
         zaszkodzi */
