@@ -29,8 +29,11 @@ template <typename Virus>
 class VirusNode {
 public:
     Virus virus;
-    std::vector<std::shared_ptr<VirusNode<Virus>>> children;
-    std::set<typename Virus::id_type> parents;
+    /* Vectory to bardzo słabe pomysły, bo chcemy szybko usuwać... */
+    std::set<std::shared_ptr<VirusNode<Virus>>,
+             std::owner_less<std::shared_ptr<VirusNode<Virus>>>> children;
+    std::set<std::weak_ptr<VirusNode<Virus>>,
+             std::owner_less<std::weak_ptr<VirusNode<Virus>>>> parents;
 
     VirusNode(Virus::id_type const &id) : virus(id) {};
 private:
@@ -73,19 +76,17 @@ public:
             throw VirusAlreadyCreated{};
         
         auto virus = std::make_shared<VirusNode<Virus>>(id);
-        virus->parents = std::set<typename Virus::id_type>(parents_ids.begin(), parents_ids.end());
-        std::vector<std::shared_ptr<VirusNode<Virus>>> parents_pointers;
-
-        for (auto const &p_id : virus->parents)
-            parents_pointers.push_back(get_node(p_id));
+        for (auto const &p_id : parents_ids)
+            virus->parents.insert(get_node(p_id));
 
         /* Do tego miejsca nie wprowadziliśmy jeszcze żadnej zmiany w strukturze.
         Jeżeli poniżej poleci wyjątek, to nadal nie będzie żadnej zmiany. */
         viruses[id] = virus;
 
         /* Od tej pory już żaden wyjątek zdarzyć się nie może... */
-        for (auto const &p : parents_pointers)
-            p->children.push_back(virus);
+        // PYTANIE: czy auto, czy auto const &?
+        for (auto p : virus->parents)
+            p.lock()->children.insert(virus);
     }
 
     void create(Virus::id_type const &id, Virus::id_type const &parent_id) {
@@ -96,21 +97,23 @@ public:
 
     std::vector<typename Virus::id_type> get_parents(Virus::id_type const &id) const {
         /* wyjątki nam nie straszne, bo nic nie zmieniamy */
-        auto const &parents = get_node(id)->parents;
-        return {parents.begin(), parents.end()};
+
+        std::vector<typename Virus::id_type> parents_ids;
+        // PYTANIE: czy auto, czy auto const & ???
+        for (auto p : get_node(id)->parents)
+            parents_ids.push_back(p.lock()->virus.get_id());
+
+        return parents_ids;
     }
 
     void connect(Virus::id_type const &child_id, Virus::id_type const &parent_id) {
         auto child_ptr = get_node(child_id);
         auto parent_ptr = get_node(parent_id);
 
-        /* Do tej pory nie wprowadziliśmy żadnej zmiany. Przy wstawianiu do seta
-        może polecieć wyjątek, ale wtedy nadal nie będzie żadnej zmiany. Po
-        wstawieniu do seta jesteśmy już bezpieczni, wstawienie do vectora
-        nie może spowodować wyjątku. */
-        if (child_ptr->parents.insert(parent_id).second)
-            /* Jeżeli tej krawędzi wcześniej nie było... */
-            parent_ptr->children.push_back(child_ptr);
+        /* Do tej pory nie wprowadziliśmy żadnej zmiany. A niżej nie poleci
+        już żaden wyjątek. */
+        child_ptr->parents.insert(parent_ptr);
+        parent_ptr->children.insert(child_ptr);
     }
 
 private:
