@@ -100,6 +100,19 @@ public:
         return {parents.begin(), parents.end()};
     }
 
+    void connect(Virus::id_type const &child_id, Virus::id_type const &parent_id) {
+        auto child_ptr = get_node(child_id);
+        auto parent_ptr = get_node(parent_id);
+
+        /* Do tej pory nie wprowadziliśmy żadnej zmiany. Przy wstawianiu do seta
+        może polecieć wyjątek, ale wtedy nadal nie będzie żadnej zmiany. Po
+        wstawieniu do seta jesteśmy już bezpieczni, wstawienie do vectora
+        nie może spowodować wyjątku. */
+        if (child_ptr->parents.insert(parent_id).second)
+            /* Jeżeli tej krawędzi wcześniej nie było... */
+            parent_ptr->children.push_back(child_ptr);
+    }
+
 private:
     std::shared_ptr<VirusNode<Virus>> stem_node;
     std::map<typename Virus::id_type, std::shared_ptr<VirusNode<Virus>>> viruses;
@@ -117,8 +130,8 @@ private:
 };
 
 //TODO BASIA:
-//TODO MIESZKO: create, get_parents, 
-//CIEKAWE: iterator 1, iterator 2, connect, remove (strong)
+//TODO MIESZKO: create, get_parents, connect, 
+//CIEKAWE: iterator 1, iterator 2, remove (strong)
 //DONE: wyjąteczki
 
 #endif // VIRUS_GENEALOGY_H
