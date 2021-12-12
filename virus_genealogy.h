@@ -2,6 +2,7 @@
 #define VIRUS_GENEALOGY_H
 
 #include <map>
+#include <set>
 #include <vector>
 #include <memory>
 #include <stdexcept>
@@ -26,7 +27,7 @@ class VirusNode {
 public:
     Virus virus;
     std::vector<std::shared_ptr<VirusNode<Virus>>> children;
-    std::vector<std::weak_ptr<VirusNode<Virus>>> parents;
+    std::set<Virus::id_type> parents;
 
     VirusNode(Virus::id_type const &id) : virus(id) {};
 private:
@@ -69,6 +70,37 @@ public:
             std::out_of_range, które my weźmiemy za rzucone przez mapę? */
             throw VirusNotFound{};
         }
+    }
+
+    void create(Virus::id_type const &id, std::vector<Virus::id_type> const &parents_ids) {
+        if (viruses.contains(id))
+            throw VirusAlreadyCreated{};
+        
+        auto virus = make_shared<VirusNode<Virus>>(id);
+        virus->parents = set<Virus::id_type>(parents_ids.begin(), parents_ids.end());
+        std::vector<shared_ptr<VirusNode<Virus>>> parents_pointers;
+
+        try {
+            for (auto const &p_id : virus->parents)
+                parents_pointers.push_back(viruses.at(p_id));
+        } catch(const std::out_of_range&) {
+            /* TO SAMO PYTANIE co w operator[] */
+            throw VirusNotFound{};
+        }
+
+        /* Do tego miejsca nie wprowadziliśmy jeszcze żadnej zmiany w strukturze.
+        Jeżeli poniżej poleci wyjątek, to nadal nie będzie żadnej zmiany. */
+        viruses[id] = virus;
+
+        /* Od tej pory już żaden wyjątek zdarzyć się nie może... */
+        for (auto const &p : parents_pointers)
+            p->children.push_back(virus);
+    }
+
+    void create(Virus::id_type const &id, Virus::id_type const &parent_id) {
+        /* Potem można się zastanowić, czy nie byłoby lepiej napisać oddzielną
+        wersję. */
+        create(id, {parent_id});
     }
 
 private:
