@@ -77,8 +77,8 @@ private:
 };
 
 //TODO BASIA:
-//TODO MIESZKO: 
-//CIEKAWE: iterator 1, iterator 2, get_parents, create, connect, remove (strong)
+//TODO MIESZKO: create
+//CIEKAWE: iterator 1, iterator 2, get_parents, connect, remove (strong)
 //DONE: wyjąteczki
 
 #endif // VIRUS_GENEALOGY_H
