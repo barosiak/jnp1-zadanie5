@@ -1,6 +1,9 @@
 #ifndef VIRUS_GENEALOGY_H
 #define VIRUS_GENEALOGY_H
 
+//TYMCZASOWO!!
+#include <iostream>
+
 #include <map>
 #include <set>
 #include <vector>
@@ -27,7 +30,7 @@ class VirusNode {
 public:
     Virus virus;
     std::vector<std::shared_ptr<VirusNode<Virus>>> children;
-    std::set<Virus::id_type> parents;
+    std::set<typename Virus::id_type> parents;
 
     VirusNode(Virus::id_type const &id) : virus(id) {};
 private:
@@ -62,31 +65,19 @@ public:
     }
 
     const Virus& operator[](Virus::id_type const &id) const {
-        try {
-            return viruses.at(id)->virus;
-        } catch(const std::out_of_range&) {
-            /* PYTANIE: Czy tak jest ok? Nasze metody mają rzucać dalej wszystkie
-            wyjątki od wirusów, czy można założyć, że wirus nie rzuci 
-            std::out_of_range, które my weźmiemy za rzucone przez mapę? */
-            throw VirusNotFound{};
-        }
+        return get_node(id)->virus;
     }
 
-    void create(Virus::id_type const &id, std::vector<Virus::id_type> const &parents_ids) {
+    void create(Virus::id_type const &id, std::vector<typename Virus::id_type> const &parents_ids) {
         if (viruses.contains(id))
             throw VirusAlreadyCreated{};
         
-        auto virus = make_shared<VirusNode<Virus>>(id);
-        virus->parents = set<Virus::id_type>(parents_ids.begin(), parents_ids.end());
-        std::vector<shared_ptr<VirusNode<Virus>>> parents_pointers;
+        auto virus = std::make_shared<VirusNode<Virus>>(id);
+        virus->parents = std::set<typename Virus::id_type>(parents_ids.begin(), parents_ids.end());
+        std::vector<std::shared_ptr<VirusNode<Virus>>> parents_pointers;
 
-        try {
-            for (auto const &p_id : virus->parents)
-                parents_pointers.push_back(viruses.at(p_id));
-        } catch(const std::out_of_range&) {
-            /* TO SAMO PYTANIE co w operator[] */
-            throw VirusNotFound{};
-        }
+        for (auto const &p_id : virus->parents)
+            parents_pointers.push_back(get_node(p_id));
 
         /* Do tego miejsca nie wprowadziliśmy jeszcze żadnej zmiany w strukturze.
         Jeżeli poniżej poleci wyjątek, to nadal nie będzie żadnej zmiany. */
@@ -100,17 +91,34 @@ public:
     void create(Virus::id_type const &id, Virus::id_type const &parent_id) {
         /* Potem można się zastanowić, czy nie byłoby lepiej napisać oddzielną
         wersję. */
-        create(id, {parent_id});
+        create(id, std::vector<typename Virus::id_type>{parent_id});
+    }
+
+    std::vector<typename Virus::id_type> get_parents(Virus::id_type const &id) const {
+        /* wyjątki nam nie straszne, bo nic nie zmieniamy */
+        auto const &parents = get_node(id)->parents;
+        return {parents.begin(), parents.end()};
     }
 
 private:
     std::shared_ptr<VirusNode<Virus>> stem_node;
     std::map<typename Virus::id_type, std::shared_ptr<VirusNode<Virus>>> viruses;
+
+    std::shared_ptr<VirusNode<Virus>> get_node(Virus::id_type const &id) const {
+        try {
+            return viruses.at(id);
+        } catch(const std::out_of_range&) {
+            /* PYTANIE: Czy tak jest ok? Nasze metody mają rzucać dalej wszystkie
+            wyjątki od wirusów, czy można założyć, że wirus nie rzuci 
+            std::out_of_range, które my weźmiemy za rzucone przez mapę? */
+            throw VirusNotFound{};
+        }
+    }
 };
 
 //TODO BASIA:
-//TODO MIESZKO: create
-//CIEKAWE: iterator 1, iterator 2, get_parents, connect, remove (strong)
+//TODO MIESZKO: create, get_parents, 
+//CIEKAWE: iterator 1, iterator 2, connect, remove (strong)
 //DONE: wyjąteczki
 
 #endif // VIRUS_GENEALOGY_H
