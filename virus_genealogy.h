@@ -116,6 +116,50 @@ public:
         parent_ptr->children.insert(child_ptr);
     }
 
+    class children_iterator {
+    private:
+        /* Takie określenie typu chyba nie jest za ładne, ew do poprawy. */
+        using set_iterator_t = decltype(VirusNode<Virus>::children)::iterator;
+
+        set_iterator_t it; 
+
+    public:
+        using iterator_type = set_iterator_t;
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = Virus;
+        using difference_type = set_iterator_t::difference_type;
+        using reference = Virus const &;
+        using pointer = Virus *; // PYTANIE: const czy nie??
+
+        children_iterator() = default;
+
+        explicit children_iterator(iterator_type it) : it(it) {};
+
+        reference operator*() const { return (*it)->virus; }
+
+        pointer operator->() const { return &(*it)->virus; }
+
+        bool operator==(children_iterator const &) const = default;
+
+        children_iterator &operator++() { it++; return *this; }
+
+        children_iterator operator++(int) { return children_iterator(it++); }
+
+        children_iterator &operator--() { it--; return *this; }
+
+        children_iterator operator--(int) { return children_iterator(it--); }
+
+        // PYTANIE: nie trzeba implementować +, +=, -, -=?
+    };
+
+    children_iterator get_children_begin(Virus::id_type const &id) const {
+        return children_iterator(get_node(id)->children.begin());
+    }
+
+    children_iterator get_children_end(Virus::id_type const &id) const {
+        return children_iterator(get_node(id)->children.end());
+    }
+
 private:
     std::shared_ptr<VirusNode<Virus>> stem_node;
     std::map<typename Virus::id_type, std::shared_ptr<VirusNode<Virus>>> viruses;
@@ -132,9 +176,9 @@ private:
     }
 };
 
-//TODO BASIA:
-//TODO MIESZKO: create, get_parents, connect, 
-//CIEKAWE: iterator 1, iterator 2, remove (strong)
+//TODO BASIA: remove (strong)
+//TODO MIESZKO: create, get_parents, connect, iterator 1, iterator 2, 
+//CIEKAWE: 
 //DONE: wyjąteczki
 
 #endif // VIRUS_GENEALOGY_H
