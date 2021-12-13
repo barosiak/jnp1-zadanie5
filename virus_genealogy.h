@@ -12,15 +12,15 @@
 
 // PYTANIE: czy te virtual są dobrze użyte?
 
-struct VirusAlreadyCreated : public virtual std::invalid_argument {
+struct VirusAlreadyCreated : public std::invalid_argument {
     VirusAlreadyCreated() : std::invalid_argument("VirusAlreadyCreated") {};
 };
 
-struct VirusNotFound : public virtual std::invalid_argument {
+struct VirusNotFound : public std::invalid_argument {
     VirusNotFound() : std::invalid_argument("VirusNotFound") {};
 };
 
-struct TriedToRemoveStemVirus : public virtual std::invalid_argument {
+struct TriedToRemoveStemVirus : public std::invalid_argument {
     TriedToRemoveStemVirus() : std::invalid_argument("TriedToRemoveStemVirus") {};
 };
 
@@ -84,7 +84,8 @@ public:
         viruses[id] = virus;
 
         /* Od tej pory już żaden wyjątek zdarzyć się nie może... */
-        // PYTANIE: czy auto, czy auto const &?
+        /* MOŻE!!!!!!!!!!!!!!!!!!!!!! */
+        // PYTANIE: czy auto, czy auto const &? auto
         for (auto p : virus->parents)
             p.lock()->children.insert(virus);
     }
@@ -116,6 +117,7 @@ public:
         parent_ptr->children.insert(child_ptr);
     }
 
+    // DZIEDZICZENIE PO ITERATOR
     class children_iterator {
     private:
         /* Takie określenie typu chyba nie jest za ładne, ew do poprawy. */
@@ -149,7 +151,7 @@ public:
 
         children_iterator operator--(int) { return children_iterator(it--); }
 
-        // PYTANIE: nie trzeba implementować +, +=, -, -=?
+        // PYTANIE: nie trzeba implementować +, +=, -, -=? NIE
     };
 
     children_iterator get_children_begin(Virus::id_type const &id) const {
@@ -171,6 +173,7 @@ private:
             /* PYTANIE: Czy tak jest ok? Nasze metody mają rzucać dalej wszystkie
             wyjątki od wirusów, czy można założyć, że wirus nie rzuci 
             std::out_of_range, które my weźmiemy za rzucone przez mapę? */
+            /* NIE, NIE MOŻEMY */
             throw VirusNotFound{};
         }
     }
