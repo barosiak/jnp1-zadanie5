@@ -6,6 +6,8 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+//tymczasowo
+#include <iostream>
 
 struct VirusAlreadyCreated : public std::invalid_argument {
     VirusAlreadyCreated() : std::invalid_argument("VirusAlreadyCreated") {};
@@ -114,7 +116,9 @@ public:
     }
 
     void remove(typename Virus::id_type const &id) {
-        if (get_stem_id() == id) {
+        if (!viruses.contains(id)) {
+            throw VirusNotFound{};
+        } else if (get_stem_id() == id) {
             throw TriedToRemoveStemVirus{};
         }
 
