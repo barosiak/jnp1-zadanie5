@@ -114,6 +114,20 @@ public:
     }
 
     void remove(typename Virus::id_type const &id) {
+        auto node_it = viruses.find(id);
+        std::vector<typename std::map<typename Virus::id_type, 
+                    std::shared_ptr<VirusNode>>::iterator> children_to_delete;
+
+        for (auto child : (node_it->second)->children) {
+            if (child.get()->parents.size() == 1 && child.get()->parents.contains(node_it->second)) {
+                children_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
+            }
+        }
+
+        for (auto child : children_to_delete) {
+            viruses.erase(child);
+        }
+        viruses.erase(node_it);
     }
 
     class children_iterator : public std::iterator<std::bidirectional_iterator_tag, Virus> {
@@ -121,7 +135,7 @@ public:
         /* Takie określenie typu chyba nie jest za ładne, ew do poprawy. */
         using set_iterator_t = typename decltype(VirusNode::children)::iterator;
 
-        set_iterator_t it; 
+        set_iterator_t it;
 
     public:
         children_iterator() = default;
@@ -155,8 +169,8 @@ public:
 };
 
 //TODO BASIA: remove (strong)
-//TODO MIESZKO: create, get_parents, connect, iterator 1, iterator 2, 
-//CIEKAWE: 
+//TODO MIESZKO: create, get_parents, connect, iterator 1, iterator 2,
+//CIEKAWE:
 //DONE: wyjąteczki
 
 #endif // VIRUS_GENEALOGY_H
