@@ -114,6 +114,10 @@ public:
     }
 
     void remove(typename Virus::id_type const &id) {
+        if (get_stem_id() == id) {
+            throw TriedToRemoveStemVirus{};
+        }
+
         auto node_it = viruses.find(id);
         std::vector<typename std::map<typename Virus::id_type, 
                     std::shared_ptr<VirusNode>>::iterator> children_to_delete;
