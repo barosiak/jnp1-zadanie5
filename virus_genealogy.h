@@ -29,13 +29,13 @@ private:
         std::set<std::weak_ptr<VirusNode>,
                 std::owner_less<std::weak_ptr<VirusNode>>> parents;
 
-        VirusNode(Virus::id_type const &id) : virus(id) {};
+        VirusNode(typename Virus::id_type const &id) : virus(id) {};
     };
 
     std::shared_ptr<VirusNode> stem_node;
     std::map<typename Virus::id_type, std::shared_ptr<VirusNode>> viruses;
 
-    std::shared_ptr<VirusNode> get_node(Virus::id_type const &id) const {
+    std::shared_ptr<VirusNode> get_node(typename Virus::id_type const &id) const {
         auto it = viruses.find(id);
         if (it == viruses.end())
             throw VirusNotFound{};
@@ -43,7 +43,7 @@ private:
     }
 
 public:
-    VirusGenealogy(Virus::id_type const &stem_id) {
+    VirusGenealogy(typename Virus::id_type const &stem_id) {
         stem_node = std::make_shared<VirusNode>(stem_id);
         viruses[stem_id] = stem_node;
     }
@@ -52,19 +52,19 @@ public:
 
     VirusGenealogy &operator=(VirusGenealogy const &) = delete;
 
-    Virus::id_type get_stem_id() const {
+    typename Virus::id_type get_stem_id() const {
         return stem_node->virus.get_id();
     }
 
-    bool exists(Virus::id_type const &id) const {
+    bool exists(typename Virus::id_type const &id) const {
         return viruses.contains(id);
     }
 
-    const Virus& operator[](Virus::id_type const &id) const {
+    const Virus& operator[](typename Virus::id_type const &id) const {
         return get_node(id)->virus;
     }
 
-    void create(Virus::id_type const &id, std::vector<typename Virus::id_type> const &parents_ids) {
+    void create(typename Virus::id_type const &id, std::vector<typename Virus::id_type> const &parents_ids) {
         auto virus = std::make_shared<VirusNode>(id);
         for (auto const &p_id : parents_ids)
             virus->parents.insert(get_node(p_id));
@@ -85,13 +85,13 @@ public:
         }
     }
 
-    void create(Virus::id_type const &id, Virus::id_type const &parent_id) {
+    void create(typename Virus::id_type const &id, typename Virus::id_type const &parent_id) {
         /* Potem można się zastanowić, czy nie byłoby lepiej napisać oddzielną
         wersję. */
         create(id, std::vector<typename Virus::id_type>{parent_id});
     }
 
-    std::vector<typename Virus::id_type> get_parents(Virus::id_type const &id) const {
+    std::vector<typename Virus::id_type> get_parents(typename Virus::id_type const &id) const {
         std::vector<typename Virus::id_type> parents_ids;
         for (auto p : get_node(id)->parents)
             parents_ids.push_back(p.lock()->virus.get_id());
@@ -99,7 +99,7 @@ public:
         return parents_ids;
     }
 
-    void connect(Virus::id_type const &child_id, Virus::id_type const &parent_id) {
+    void connect(typename Virus::id_type const &child_id, typename Virus::id_type const &parent_id) {
         auto child_ptr = get_node(child_id);
         auto parent_ptr = get_node(parent_id);
 
@@ -113,10 +113,13 @@ public:
         }
     }
 
+    void remove(typename Virus::id_type const &id) {
+    }
+
     class children_iterator : public std::iterator<std::bidirectional_iterator_tag, Virus> {
     private:
         /* Takie określenie typu chyba nie jest za ładne, ew do poprawy. */
-        using set_iterator_t = decltype(VirusNode::children)::iterator;
+        using set_iterator_t = typename decltype(VirusNode::children)::iterator;
 
         set_iterator_t it; 
 
@@ -142,11 +145,11 @@ public:
         children_iterator operator--(int) { return children_iterator(it--); }
     };
 
-    children_iterator get_children_begin(Virus::id_type const &id) const {
+    children_iterator get_children_begin(typename Virus::id_type const &id) const {
         return children_iterator(get_node(id)->children.begin());
     }
 
-    children_iterator get_children_end(Virus::id_type const &id) const {
+    children_iterator get_children_end(typename Virus::id_type const &id) const {
         return children_iterator(get_node(id)->children.end());
     }
 };
