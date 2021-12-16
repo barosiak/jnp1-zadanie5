@@ -122,6 +122,7 @@ public:
             if (child.get()->parents.size() == 1 && child.get()->parents.contains(node_it->second)) {
                 children_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
             }
+            child.get()->parents.erase(node_it->second);
         }
 
         for (auto child : children_to_delete) {
