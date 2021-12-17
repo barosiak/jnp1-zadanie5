@@ -26,9 +26,9 @@ private:
     struct VirusNode {
         Virus virus;
         std::set<std::shared_ptr<VirusNode>,
-                 std::owner_less<std::shared_ptr<VirusNode>>> children;
+                std::owner_less<std::shared_ptr<VirusNode>>> children;
         std::set<std::weak_ptr<VirusNode>,
-                 std::owner_less<std::weak_ptr<VirusNode>>> parents;
+                std::owner_less<std::weak_ptr<VirusNode>>> parents;
         int parents_counter = 0;
 
         VirusNode(typename Virus::id_type const &id) : virus(id) {};
@@ -54,7 +54,7 @@ private:
     //TODO p → parent
     void remove_dfs(typename Virus::id_type const &id,
                     std::vector<typename std::map<typename Virus::id_type,
-                    std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
+                            std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
 
         auto node_it = viruses.find(id);
 
@@ -97,7 +97,7 @@ public:
 
         auto virus = std::make_shared<VirusNode>(id);
         for (auto const &p_id: parents_ids)
-             virus->parents.insert(get_node(p_id));
+            virus->parents.insert(get_node(p_id));
         virus->parents_counter = virus->parents.size();
 
         auto[virus_it, inserted] = viruses.insert({id, virus});
@@ -155,7 +155,7 @@ public:
         }
 
         std::vector<typename std::map<typename Virus::id_type,
-                    std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
+                std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
 
         try {
             auto node_it = viruses.find(id);
@@ -185,7 +185,7 @@ public:
     }
 
     class children_iterator
-        : public std::iterator<std::bidirectional_iterator_tag, Virus> {
+            : public std::iterator<std::bidirectional_iterator_tag, Virus> {
     private:
         using set_iterator_t = typename decltype(VirusNode::children)::iterator;
 
