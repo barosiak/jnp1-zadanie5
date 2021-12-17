@@ -124,8 +124,8 @@ public:
     std::vector<typename Virus::id_type>
     get_parents(typename Virus::id_type const &id) const {
         std::vector<typename Virus::id_type> parents_ids;
-        for (auto p: get_node(id)->parents)
-            parents_ids.push_back(p.lock()->virus.get_id());
+        for (auto parent: get_node(id)->parents)
+            parents_ids.push_back(parent.lock()->virus.get_id());
 
         return parents_ids;
     }
