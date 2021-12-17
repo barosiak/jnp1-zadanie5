@@ -6,8 +6,6 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
-//tymczasowe
-#include <iostream>
 
 struct VirusAlreadyCreated : public std::invalid_argument {
     VirusAlreadyCreated() : std::invalid_argument("VirusAlreadyCreated") {};
@@ -92,7 +90,6 @@ public:
                 (--parents_it)->lock()->children.erase(virus);
             throw;
         }
-        //std::cout << " " << virus->parents_counter  << " " << virus->parents.size() << "\n";
     }
 
     void create(typename Virus::id_type const &id, typename Virus::id_type const &parent_id) {
@@ -134,9 +131,9 @@ public:
             if (child.get()->parents_counter == 1) {
                 nodes_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
                 remove_dfs(child.get()->virus.get_id(), nodes_to_delete);
-            }
-            else
+            } else {
                 child.get()->parents_counter--;
+            }
         }
     }
 
@@ -154,25 +151,21 @@ public:
             nodes_to_delete.push_back(node_it);
             remove_dfs(id, nodes_to_delete);
 
-            // usuwamy nas z dzieci naszych rodziców - dotyczy tylko pierwszego usuwanego wierzholka
             for (auto it = node_it->second->parents.begin(); it != node_it->second->parents.end(); ++it) {
                 it->lock()->children.erase(node_it->second);
             }
         } catch (...) {
-            // naprawiamy counterki
             for (auto node : nodes_to_delete)
                 for (auto ch : node->second->children)
                     ch->parents_counter = ch->parents.size();
             throw;
         }
 
-        // usuwamy dzieci bez rodzica
         for (auto node : nodes_to_delete) {
-            //usuwamy siebie jako rodzica naszych dzieci
             for (auto child : (node->second)->children) {
                 child.get()->parents.erase(node->second);
             }
-            //usuwamy siebie
+
             viruses.erase(node);
         }
     }
