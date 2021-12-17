@@ -1,5 +1,4 @@
-#define _GNU_SOURCE
-#include <dlfcn.h>
+//#include <dlfcn.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -12,22 +11,39 @@ bool should_fail() {
     if (enable_throw && --to_throw == 0) {
         to_throw = THROW_FREQ;
         throw_cnt++;
+        printf("ajajaj\n");
         return true;
     }
     return false;
 }
 
-extern "C" {
+/*extern "C" {
 
-void* malloc(size_t sz) __THROW {
+void *calloc(size_t nmemb, size_t sz) {
+    typedef void *(*calloc_t)(size_t, size_t);
+    calloc_t libc_calloc = calloc_t(dlsym(RTLD_NEXT, "calloc"));
+   // if (should_fail())
+    //    return NULL;
+    return libc_calloc(nmemb, sz);
+}
+
+void* malloc(size_t sz)  {
     typedef void *(*malloc_t)(size_t);
-    void *(*libc_malloc)(size_t) = malloc_t(dlsym(RTLD_NEXT, "malloc"));
+    malloc_t libc_malloc = malloc_t(dlsym(RTLD_NEXT, "malloc"));
     //if (should_fail())
     //    return NULL;
     return libc_malloc(sz);
 }
 
+void *realloc(void *ptr, size_t sz)  {
+    typedef void *(*realloc_t)(size_t);
+    realloc_t libc_realloc = realloc_t(dlsym(RTLD_NEXT, "realloc"));
+    //if (should_fail())
+    //    return NULL;
+    return libc_realloc(sz);  
 }
+
+}*/
 
 #include <bits/stdc++.h>
 #include "../virus_genealogy.h"
@@ -126,7 +142,7 @@ int root = 0;
 VirusGenealogy<Virus> G(root);
 set<int> ch[MAX_N];
 set<int> p[MAX_N];
-mt19937 rng(7);
+mt19937 rng(10);
 
 int rand(int a, int b) {
     return uniform_int_distribution<int>(a, b)(rng);

@@ -71,10 +71,9 @@ public:
 
     void create(typename Virus::id_type const &id, std::vector<typename Virus::id_type> const &parents_ids) {
         auto virus = std::make_shared<VirusNode>(id);
-        for (auto const &p_id : parents_ids) {
+        for (auto const &p_id : parents_ids)
             virus->parents.insert(get_node(p_id));
-            virus->parents_counter++;
-        }
+        virus->parents_counter = virus->parents.size();
 
         auto [virus_it, inserted] = viruses.insert({id, virus});
         if (!inserted)
@@ -111,14 +110,14 @@ public:
         auto child_ptr = get_node(child_id);
         auto parent_ptr = get_node(parent_id);
 
-        child_ptr->parents.insert(parent_ptr);
-        child_ptr->parents_counter++;
-
-        try {
-            parent_ptr->children.insert(child_ptr);
-        } catch (...) {
-            child_ptr->parents.erase(parent_ptr);
-            throw;
+        if (child_ptr->parents.insert(parent_ptr).second) {
+            try {
+                parent_ptr->children.insert(child_ptr);
+                child_ptr->parents_counter++;
+            } catch (...) {
+                child_ptr->parents.erase(parent_ptr);
+                throw;
+            }
         }
     }
 
