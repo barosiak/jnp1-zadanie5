@@ -45,6 +45,22 @@ private:
         return it->second;
     }
 
+
+    void remove_dfs(typename Virus::id_type const &id,
+                    std::vector<typename std::map<typename Virus::id_type,
+                            std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
+
+        auto node_it = viruses.find(id);
+
+        for (auto child : (node_it->second)->children) {
+            if (child.get()->parents_counter == 1) {
+                nodes_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
+                remove_dfs(child.get()->virus.get_id(), nodes_to_delete);
+            } else {
+                child.get()->parents_counter--;
+            }
+        }
+    }
 public:
     VirusGenealogy(typename Virus::id_type const &stem_id) {
         stem_node = std::make_shared<VirusNode>(stem_id);
@@ -117,22 +133,6 @@ public:
             } catch (...) {
                 child_ptr->parents.erase(parent_ptr);
                 throw;
-            }
-        }
-    }
-
-    void remove_dfs(typename Virus::id_type const &id,
-                    std::vector<typename std::map<typename Virus::id_type,
-                    std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
-
-        auto node_it = viruses.find(id);
-
-        for (auto child : (node_it->second)->children) {
-            if (child.get()->parents_counter == 1) {
-                nodes_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
-                remove_dfs(child.get()->virus.get_id(), nodes_to_delete);
-            } else {
-                child.get()->parents_counter--;
             }
         }
     }
