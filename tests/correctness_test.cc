@@ -1,56 +1,46 @@
-//#include <dlfcn.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <new>
+#include <cstdio>
+#include <cstdlib>
 
-const int THROW_FREQ = 30;
+const int THROW_FREQ = 50;
 bool enable_throw = false;
 int to_throw = THROW_FREQ;
 int throw_cnt = 0;
+
+struct MyVeryOwnException {};
 
 bool should_fail() {
     if (enable_throw && --to_throw == 0) {
         to_throw = THROW_FREQ;
         throw_cnt++;
-        printf("ajajaj\n");
         return true;
     }
     return false;
 }
 
-/*extern "C" {
-
-void *calloc(size_t nmemb, size_t sz) {
-    typedef void *(*calloc_t)(size_t, size_t);
-    calloc_t libc_calloc = calloc_t(dlsym(RTLD_NEXT, "calloc"));
-   // if (should_fail())
-    //    return NULL;
-    return libc_calloc(nmemb, sz);
+void *operator new(std::size_t size) {
+    if (should_fail())
+        throw std::bad_alloc();
+    if (size == 0)
+        size = 1;
+    void* p;
+    while ((p = ::malloc(size)) == nullptr)
+    {
+        // If malloc fails and there is a new_handler,
+        // call it to try free up memory.
+        std::new_handler nh = std::get_new_handler();
+        if (nh)
+            nh();
+        else
+            throw std::bad_alloc();
+    }
+    return p;
 }
-
-void* malloc(size_t sz)  {
-    typedef void *(*malloc_t)(size_t);
-    malloc_t libc_malloc = malloc_t(dlsym(RTLD_NEXT, "malloc"));
-    //if (should_fail())
-    //    return NULL;
-    return libc_malloc(sz);
-}
-
-void *realloc(void *ptr, size_t sz)  {
-    typedef void *(*realloc_t)(size_t);
-    realloc_t libc_realloc = realloc_t(dlsym(RTLD_NEXT, "realloc"));
-    //if (should_fail())
-    //    return NULL;
-    return libc_realloc(sz);  
-}
-
-}*/
 
 #include <bits/stdc++.h>
 #include "../virus_genealogy.h"
 
 using namespace std;
-
-struct MyVeryOwnException : std::exception {};
 
 void bad() {
     if (should_fail())
@@ -136,8 +126,8 @@ bool has_same_addresses(Iter begin, Iter end, std::vector<const Virus*> addresse
 	return has_same_content(v, addresses);
 }
 
-const int MAX_N = 5;
-const int OPS = 100000;
+const int MAX_N = 50;
+const int OPS = 50000;
 int root = 0;
 VirusGenealogy<Virus> G(root);
 set<int> ch[MAX_N];
@@ -161,6 +151,7 @@ void remove_dfs(int w) {
 }
 
 int main(int argc, char *argv[]) {
+    int *a = new int[3];
     //rng = mt19937(stoi(argv[1]));
 
     check_throws_up<TriedToRemoveStemVirus>([&] {G.remove(root); });
@@ -174,7 +165,7 @@ int main(int argc, char *argv[]) {
                 occup_nums.push_back(i);
         }
 
-        int type = rand(0, 2);
+        int type = rand(0, 7);
         try {
             if (type == 0) { // ok create
                 if (free_nums.empty())
@@ -185,18 +176,17 @@ int main(int argc, char *argv[]) {
                     occup_nums.pop_back();
                 shuffle(occup_nums.begin(), occup_nums.end(), rng);
 
-                /* USUNAC -1!! */
-                int to_remove = rand(0, occup_nums.size() - 1);
+                int to_remove = rand(0, occup_nums.size());
                 while (to_remove--)
                     occup_nums.pop_back();
 
-                cout << op << "/" << OPS << ": create(" << id() << ", {";
+                /*cout << op << "/" << OPS << ": create(" << id() << ", {";
                 for (int i = 0 ; i < occup_nums.size() ; i++) {
                     cout << occup_nums[i]();
                     if (i + 1 < occup_nums.size())
                         cout << ", ";
                 }
-                cout << "});\n";
+                cout << "});\n";*/
 
                 enable_throw = true;
                 G.create(id, occup_nums);
@@ -211,7 +201,7 @@ int main(int argc, char *argv[]) {
                     continue;
 
                 IdType id = occup_nums[rand(1, occup_nums.size() - 1)];
-                cout << op << "/" << OPS << ": remove(" << id() << ");\n";
+                //cout << op << "/" << OPS << ": remove(" << id() << ");\n";
 
                 enable_throw = true;
                 G.remove(id);
@@ -228,7 +218,7 @@ int main(int argc, char *argv[]) {
                 IdType a = occup_nums[a_ind];
                 IdType b = occup_nums[rand(a_ind + 1, occup_nums.size() - 1)];
 
-                cout << op << "/" << OPS << ": connect(" << b() << ", " << a() << ");\n";
+                //cout << op << "/" << OPS << ": connect(" << b() << ", " << a() << ");\n";
                 enable_throw = true;
                 G.connect(b, a);
                 enable_throw = false;
@@ -240,7 +230,7 @@ int main(int argc, char *argv[]) {
                     continue;
 
                 IdType id = free_nums[rand(0, free_nums.size() - 1)];
-                cout << op << "/" << OPS << ": remove(" << id() << ");\n";
+                //cout << op << "/" << OPS << ": remove(" << id() << ");\n";
 
                 enable_throw = true;
                 check_throws_up<VirusNotFound>([&] {G.remove(id);});
@@ -251,7 +241,7 @@ int main(int argc, char *argv[]) {
 
                 IdType c = occup_nums[rand(0, occup_nums.size() - 1)];
                 IdType pp = free_nums[rand(0, free_nums.size() - 1)];
-                cout << op << "/" << OPS << ": connect(" << c() << ", " << pp() << ");\n";
+                //cout << op << "/" << OPS << ": connect(" << c() << ", " << pp() << ");\n";
 
                 enable_throw = true;
                 check_throws_up<VirusNotFound>([&] {G.connect(c, pp);});
@@ -262,7 +252,7 @@ int main(int argc, char *argv[]) {
 
                 IdType pp = occup_nums[rand(0, occup_nums.size() - 1)];
                 IdType c = free_nums[rand(0, free_nums.size() - 1)];
-                cout << op << "/" << OPS << ": connect(" << c() << ", " << pp() << ");\n";
+                //cout << op << "/" << OPS << ": connect(" << c() << ", " << pp() << ");\n";
 
                 enable_throw = true;
                 check_throws_up<VirusNotFound>([&] {G.connect(c, pp);});
@@ -278,7 +268,7 @@ int main(int argc, char *argv[]) {
 
                 IdType par = occup_nums.back();
 
-                cout << op << "/" << OPS << ": create(" << id() << ", " << par() << ");\n";
+                //cout << op << "/" << OPS << ": create(" << id() << ", " << par() << ");\n";
                 enable_throw = true;
                 G.create(id, par);
                 enable_throw = false;
@@ -289,7 +279,7 @@ int main(int argc, char *argv[]) {
                 IdType id = occup_nums[rand(0, occup_nums.size() - 1)];
                 IdType par = occup_nums[rand(0, occup_nums.size() - 1)];
 
-                cout << op << "/" << OPS << ": create(" << id() << ", " << par() << ");\n";
+                //cout << op << "/" << OPS << ": create(" << id() << ", " << par() << ");\n";
                 enable_throw = true;
                 check_throws_up<VirusAlreadyCreated>([&] {G.create(id, par);});
                 enable_throw = false;

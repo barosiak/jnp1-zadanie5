@@ -160,9 +160,9 @@ public:
             }
         } catch (...) {
             // naprawiamy counterki
-            for (auto node : nodes_to_delete) {
-                node->second->parents_counter = node->second->parents.size();
-            }
+            for (auto node : nodes_to_delete)
+                for (auto ch : node->second->children)
+                    ch->parents_counter = ch->parents.size();
             throw;
         }
 
