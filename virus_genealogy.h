@@ -6,9 +6,6 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
-//tymczasowo
-#include <iostream>
-
 struct VirusAlreadyCreated : public std::invalid_argument {
     VirusAlreadyCreated() : std::invalid_argument("VirusAlreadyCreated") {};
 };
@@ -126,6 +123,7 @@ public:
         std::vector<typename std::map<typename Virus::id_type, 
                     std::shared_ptr<VirusNode>>::iterator> children_to_delete;
 
+        // zapisujemy dzieci bez rodzica
         for (auto child : (node_it->second)->children) {
             if (child.get()->parents.size() == 1 && child.get()->parents.contains(node_it->second)) {
                 children_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
@@ -133,9 +131,16 @@ public:
             child.get()->parents.erase(node_it->second);
         }
 
+        // usuwamy nas z dzieci rodziców
+        for (auto it = node_it->second->parents.begin(); it != node_it->second->parents.end(); ++it) {
+            it->lock()->children.erase(node_it->second);
+        }
+
+        // usuwamy dzieci bez rodzica
         for (auto child : children_to_delete) {
             viruses.erase(child);
         }
+
         viruses.erase(node_it);
     }
 

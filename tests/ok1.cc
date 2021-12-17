@@ -86,7 +86,8 @@ int main() {
 	assert(check_throws_up<VirusNotFound>([&] { g.get_children_end(0); }));
 	assert(check_throws_up<VirusNotFound>([&] { g.get_parents(0); }));
 
-	assert(has_same_addresses(g.get_children_begin(root), g.get_children_end(root), std::vector<const Virus*>{&g[n1], &g[n2], &g[n3], &g[n4]}));
+	assert(has_same_addresses(g.get_children_begin(root), g.get_children_end(root),
+                              std::vector<const Virus*>{&g[n1], &g[n2], &g[n3], &g[n4]}));
 	assert(has_same_addresses(g.get_children_begin(n1), g.get_children_end(n1), std::vector<const Virus*>{&g[n4]}));
 	assert(has_same_addresses(g.get_children_begin(n2), g.get_children_end(n2), std::vector<const Virus*>{&g[n4]}));
 	assert(has_same_addresses(g.get_children_begin(n3), g.get_children_end(n3), std::vector<const Virus*>{&g[n4]}));
@@ -98,7 +99,6 @@ int main() {
 	assert(has_same_content(g.get_parents(n2), std::vector{root}));
 	assert(has_same_content(g.get_parents(n3), std::vector{root}));
 	assert(has_same_content(g.get_parents(n4), std::vector{root, n2, n3}));
-    // Nie przechodzi poniższego asserta.
 	assert(has_same_addresses(g.get_children_begin(root), g.get_children_end(root), std::vector<const Virus*>{&g[n2], &g[n3], &g[n4]}));
 	assert(has_same_addresses(g.get_children_begin(n2), g.get_children_end(n2), std::vector<const Virus*>{&g[n4]}));
 	assert(has_same_addresses(g.get_children_begin(n3), g.get_children_end(n3), std::vector<const Virus*>{&g[n4]}));

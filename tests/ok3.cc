@@ -15,6 +15,7 @@ private:
 };
 
 int main() {
+    //dodałam std::
     static_assert(
-        bidirectional_iterator<VirusGenealogy<Virus>::children_iterator>);
+        std::bidirectional_iterator<VirusGenealogy<Virus>::children_iterator>);
 }
