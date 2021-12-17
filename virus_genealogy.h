@@ -70,6 +70,9 @@ public:
     }
 
     void create(typename Virus::id_type const &id, std::vector<typename Virus::id_type> const &parents_ids) {
+        if (parents_ids.empty())
+            return;
+
         auto virus = std::make_shared<VirusNode>(id);
         for (auto const &p_id : parents_ids)
             virus->parents.insert(get_node(p_id));
