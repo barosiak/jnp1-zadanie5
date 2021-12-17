@@ -49,13 +49,13 @@ bool has_same_addresses(Iter begin, Iter end, std::vector<const Virus*> addresse
 	return has_same_content(v, addresses);
 }
 
-const int MAX_N = 100;
+const int MAX_N = 5;
 const int OPS = 100000;
 int root = 0;
 VirusGenealogy<Virus> G(root);
 set<int> ch[MAX_N];
 set<int> p[MAX_N];
-mt19937 rng(0);
+mt19937 rng(19);
 
 int rand(int a, int b) {
     return uniform_int_distribution<int>(a, b)(rng);
@@ -73,7 +73,9 @@ void remove_dfs(int w) {
     ch[w].clear();
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    //rng = mt19937(stoi(argv[1]));
+
     check_throws_up<TriedToRemoveStemVirus>([&] {G.remove(root); });
     for (int op = 0; op < OPS; op++) {
         vector<int> free_nums;
@@ -85,7 +87,7 @@ int main() {
                 occup_nums.push_back(i);
         }
 
-        int type = rand(0, 5);
+        int type = rand(0, 1);
         if (type == 0) { // ok create
             if (free_nums.empty())
                 continue;
