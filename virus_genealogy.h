@@ -19,7 +19,8 @@ struct TriedToRemoveStemVirus : public std::invalid_argument {
     TriedToRemoveStemVirus() : std::invalid_argument("TriedToRemoveStemVirus") {};
 };
 
-template <typename Virus>
+// Class representing virus genealogy.
+template<typename Virus>
 class VirusGenealogy {
 private:
     struct VirusNode {
@@ -28,11 +29,9 @@ private:
                 std::owner_less<std::shared_ptr<VirusNode>>> children;
         std::set<std::weak_ptr<VirusNode>,
                 std::owner_less<std::weak_ptr<VirusNode>>> parents;
-        int parents_counter;
+        int parents_counter = 0;
 
-        VirusNode(typename Virus::id_type const &id) : virus(id) {
-            parents_counter = 0;
-        };
+        VirusNode(typename Virus::id_type const &id) : virus(id) {};
     };
 
     std::shared_ptr<VirusNode> stem_node;
@@ -40,19 +39,25 @@ private:
 
     std::shared_ptr<VirusNode> get_node(typename Virus::id_type const &id) const {
         auto it = viruses.find(id);
+
         if (it == viruses.end())
             throw VirusNotFound{};
+
         return it->second;
     }
 
-
+    // Helper function for remove, adds iterators of elements to remove to passed vector.
+    //TODO id na shared pointer virusnode
+    //TODO komentarze
+    //TODO klamerki
+    //TODO usun get
     void remove_dfs(typename Virus::id_type const &id,
                     std::vector<typename std::map<typename Virus::id_type,
                             std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
 
         auto node_it = viruses.find(id);
 
-        for (auto child : (node_it->second)->children) {
+        for (auto child: (node_it->second)->children) {
             if (child.get()->parents_counter == 1) {
                 nodes_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
                 remove_dfs(child.get()->virus.get_id(), nodes_to_delete);
@@ -61,6 +66,7 @@ private:
             }
         }
     }
+
 public:
     VirusGenealogy(typename Virus::id_type const &stem_id) {
         stem_node = std::make_shared<VirusNode>(stem_id);
@@ -79,20 +85,21 @@ public:
         return viruses.contains(id);
     }
 
-    const Virus& operator[](typename Virus::id_type const &id) const {
+    const Virus &operator[](typename Virus::id_type const &id) const {
         return get_node(id)->virus;
     }
 
-    void create(typename Virus::id_type const &id, std::vector<typename Virus::id_type> const &parents_ids) {
+    void create(typename Virus::id_type const &id,
+                std::vector<typename Virus::id_type> const &parents_ids) {
         if (parents_ids.empty())
             return;
 
         auto virus = std::make_shared<VirusNode>(id);
-        for (auto const &p_id : parents_ids)
+        for (auto const &p_id: parents_ids)
             virus->parents.insert(get_node(p_id));
         virus->parents_counter = virus->parents.size();
 
-        auto [virus_it, inserted] = viruses.insert({id, virus});
+        auto[virus_it, inserted] = viruses.insert({id, virus});
         if (!inserted)
             throw VirusAlreadyCreated{};
 
@@ -109,20 +116,20 @@ public:
     }
 
     void create(typename Virus::id_type const &id, typename Virus::id_type const &parent_id) {
-        /* Potem można się zastanowić, czy nie byłoby lepiej napisać oddzielną
-        wersję. */
         create(id, std::vector<typename Virus::id_type>{parent_id});
     }
 
     std::vector<typename Virus::id_type> get_parents(typename Virus::id_type const &id) const {
         std::vector<typename Virus::id_type> parents_ids;
-        for (auto p : get_node(id)->parents)
+        for (auto p: get_node(id)->parents)
             parents_ids.push_back(p.lock()->virus.get_id());
 
         return parents_ids;
     }
 
-    void connect(typename Virus::id_type const &child_id, typename Virus::id_type const &parent_id) {
+    void connect(typename Virus::id_type const &child_id,
+                 typename Virus::id_type const &parent_id) {
+
         auto child_ptr = get_node(child_id);
         auto parent_ptr = get_node(parent_id);
 
@@ -151,18 +158,21 @@ public:
             nodes_to_delete.push_back(node_it);
             remove_dfs(id, nodes_to_delete);
 
-            for (auto it = node_it->second->parents.begin(); it != node_it->second->parents.end(); ++it) {
+            //długaśne teraz brzydkie
+            for (auto it = node_it->second->parents.begin();
+                 it != node_it->second->parents.end(); ++it) {
                 it->lock()->children.erase(node_it->second);
             }
         } catch (...) {
-            for (auto node : nodes_to_delete)
-                for (auto ch : node->second->children)
+            for (auto node: nodes_to_delete)
+                for (auto ch: node->second->children)
                     ch->parents_counter = ch->parents.size();
+
             throw;
         }
 
-        for (auto node : nodes_to_delete) {
-            for (auto child : (node->second)->children) {
+        for (auto node: nodes_to_delete) {
+            for (auto child: (node->second)->children) {
                 child.get()->parents.erase(node->second);
             }
 
@@ -172,7 +182,6 @@ public:
 
     class children_iterator : public std::iterator<std::bidirectional_iterator_tag, Virus> {
     private:
-        /* Takie określenie typu chyba nie jest za ładne, ew do poprawy. */
         using set_iterator_t = typename decltype(VirusNode::children)::iterator;
 
         set_iterator_t it;
@@ -190,11 +199,17 @@ public:
             return it == other.it;
         }
 
-        children_iterator &operator++() { it++; return *this; }
+        children_iterator &operator++() {
+            it++;
+            return *this;
+        }
 
         children_iterator operator++(int) { return children_iterator(it++); }
 
-        children_iterator &operator--() { it--; return *this; }
+        children_iterator &operator--() {
+            it--;
+            return *this;
+        }
 
         children_iterator operator--(int) { return children_iterator(it--); }
     };
@@ -207,10 +222,5 @@ public:
         return children_iterator(get_node(id)->children.end());
     }
 };
-
-//TODO BASIA: remove (strong)
-//TODO MIESZKO: create, get_parents, connect, iterator 1, iterator 2,
-//CIEKAWE:
-//DONE: wyjąteczki
 
 #endif // VIRUS_GENEALOGY_H
