@@ -6,6 +6,9 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+//tymczasowe
+#include <iostream>
+
 struct VirusAlreadyCreated : public std::invalid_argument {
     VirusAlreadyCreated() : std::invalid_argument("VirusAlreadyCreated") {};
 };
@@ -27,8 +30,11 @@ private:
                 std::owner_less<std::shared_ptr<VirusNode>>> children;
         std::set<std::weak_ptr<VirusNode>,
                 std::owner_less<std::weak_ptr<VirusNode>>> parents;
+        int parents_counter;
 
-        VirusNode(typename Virus::id_type const &id) : virus(id) {};
+        VirusNode(typename Virus::id_type const &id) : virus(id) {
+            parents_counter = 0;
+        };
     };
 
     std::shared_ptr<VirusNode> stem_node;
@@ -65,8 +71,10 @@ public:
 
     void create(typename Virus::id_type const &id, std::vector<typename Virus::id_type> const &parents_ids) {
         auto virus = std::make_shared<VirusNode>(id);
-        for (auto const &p_id : parents_ids)
+        for (auto const &p_id : parents_ids) {
             virus->parents.insert(get_node(p_id));
+            virus->parents_counter++;
+        }
 
         auto [virus_it, inserted] = viruses.insert({id, virus});
         if (!inserted)
@@ -82,6 +90,7 @@ public:
                 (--parents_it)->lock()->children.erase(virus);
             throw;
         }
+        //std::cout << " " << virus->parents_counter  << " " << virus->parents.size() << "\n";
     }
 
     void create(typename Virus::id_type const &id, typename Virus::id_type const &parent_id) {
@@ -103,12 +112,29 @@ public:
         auto parent_ptr = get_node(parent_id);
 
         child_ptr->parents.insert(parent_ptr);
+        child_ptr->parents_counter++;
 
         try {
             parent_ptr->children.insert(child_ptr);
         } catch (...) {
             child_ptr->parents.erase(parent_ptr);
             throw;
+        }
+    }
+
+    void remove_dfs(typename Virus::id_type const &id,
+                    std::vector<typename std::map<typename Virus::id_type,
+                    std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
+
+        auto node_it = viruses.find(id);
+
+        for (auto child : (node_it->second)->children) {
+            if (child.get()->parents_counter == 1) {
+                nodes_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
+                remove_dfs(child.get()->virus.get_id(), nodes_to_delete);
+            }
+            else
+                child.get()->parents_counter--;
         }
     }
 
@@ -119,29 +145,34 @@ public:
             throw TriedToRemoveStemVirus{};
         }
 
-        auto node_it = viruses.find(id);
-        std::vector<typename std::map<typename Virus::id_type, 
-                    std::shared_ptr<VirusNode>>::iterator> children_to_delete;
+        std::vector<typename std::map<typename Virus::id_type,
+                std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
+        try {
+            auto node_it = viruses.find(id);
+            nodes_to_delete.push_back(node_it);
+            remove_dfs(id, nodes_to_delete);
 
-        // zapisujemy dzieci bez rodzica
-        for (auto child : (node_it->second)->children) {
-            if (child.get()->parents.size() == 1 && child.get()->parents.contains(node_it->second)) {
-                children_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
+            // usuwamy nas z dzieci naszych rodziców - dotyczy tylko pierwszego usuwanego wierzholka
+            for (auto it = node_it->second->parents.begin(); it != node_it->second->parents.end(); ++it) {
+                it->lock()->children.erase(node_it->second);
             }
-            child.get()->parents.erase(node_it->second);
-        }
-
-        // usuwamy nas z dzieci rodziców
-        for (auto it = node_it->second->parents.begin(); it != node_it->second->parents.end(); ++it) {
-            it->lock()->children.erase(node_it->second);
+        } catch (...) {
+            // naprawiamy counterki
+            for (auto node : nodes_to_delete) {
+                node->second->parents_counter = node->second->parents.size();
+            }
+            throw;
         }
 
         // usuwamy dzieci bez rodzica
-        for (auto child : children_to_delete) {
-            viruses.erase(child);
+        for (auto node : nodes_to_delete) {
+            //usuwamy siebie jako rodzica naszych dzieci
+            for (auto child : (node->second)->children) {
+                child.get()->parents.erase(node->second);
+            }
+            //usuwamy siebie
+            viruses.erase(node);
         }
-
-        viruses.erase(node_it);
     }
 
     class children_iterator : public std::iterator<std::bidirectional_iterator_tag, Virus> {
