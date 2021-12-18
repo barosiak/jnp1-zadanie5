@@ -27,9 +27,9 @@ private:
     struct VirusNode {
         Virus virus;
         std::set<std::shared_ptr<VirusNode>,
-                std::owner_less<std::shared_ptr<VirusNode>>> children;
+                 std::owner_less<std::shared_ptr<VirusNode>>> children;
         std::set<std::weak_ptr<VirusNode>,
-                std::owner_less<std::weak_ptr<VirusNode>>> parents;
+                 std::owner_less<std::weak_ptr<VirusNode>>> parents;
         int parents_counter = 0;
 
         VirusNode(typename Virus::id_type const &id) : virus(id) {};
@@ -51,7 +51,7 @@ private:
     // Helper function, adds to a passed vector iterators of elements to remove.
     void remove_dfs(typename std::shared_ptr<VirusNode> node_it,
                     std::vector<typename std::map<typename Virus::id_type,
-                            std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
+                    std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
 
         for (auto child: (node_it)->children) {
             if (child->parents_counter == 1) {
@@ -97,6 +97,7 @@ public:
         auto virus = std::make_shared<VirusNode>(id);
         for (auto const &parent_id: parents_ids)
             virus->parents.insert(get_node(parent_id));
+
         virus->parents_counter = virus->parents.size();
 
         auto[virus_it, inserted] = viruses.insert({id, virus});
@@ -158,7 +159,7 @@ public:
             throw TriedToRemoveStemVirus{};
 
         std::vector<typename std::map<typename Virus::id_type,
-                std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
+                    std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
 
         try {
             auto node = viruses.find(id)->second;
@@ -186,7 +187,7 @@ public:
 
     // Iterator class for children of nodes in virus genealogy.
     class children_iterator
-            : public std::iterator<std::bidirectional_iterator_tag, Virus> {
+        : public std::iterator<std::bidirectional_iterator_tag, Virus> {
     private:
         using set_iterator_t = typename decltype(VirusNode::children)::iterator;
 
