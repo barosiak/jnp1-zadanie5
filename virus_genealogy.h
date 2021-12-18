@@ -30,7 +30,7 @@ private:
                  std::owner_less<std::shared_ptr<VirusNode>>> children;
         std::set<std::weak_ptr<VirusNode>,
                  std::owner_less<std::weak_ptr<VirusNode>>> parents;
-        int parents_counter = 0;
+        size_t parents_counter = 0;
 
         VirusNode(typename Virus::id_type const &id) : virus(id) {};
     };
