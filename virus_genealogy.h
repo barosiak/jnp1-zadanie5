@@ -49,11 +49,11 @@ private:
     }
 
     // Helper function, adds to a passed vector iterators of elements to remove.
-    void remove_dfs(typename std::shared_ptr<VirusNode> node_it,
+    void remove_dfs(typename std::shared_ptr<VirusNode> node,
                     std::vector<typename std::map<typename Virus::id_type,
                     std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
 
-        for (auto child: (node_it)->children) {
+        for (auto child: node->children) {
             if (child->parents_counter == 1) {
                 nodes_to_delete.push_back(viruses.find(child->virus.get_id()));
                 remove_dfs(child, nodes_to_delete);
