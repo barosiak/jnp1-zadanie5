@@ -170,7 +170,6 @@ public:
 
             for (auto it = node->parents.begin(); it != node->parents.end(); ++it)
                 it->lock()->children.erase(node);
-
         } catch (...) {
             for (auto node: nodes_to_delete)
                 for (auto child: node->second->children)
