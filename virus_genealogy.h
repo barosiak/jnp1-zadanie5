@@ -171,8 +171,8 @@ public:
 
         } catch (...) {
             for (auto node: nodes_to_delete)
-                for (auto ch: node->second->children)
-                    ch->parents_counter = ch->parents.size();
+                for (auto child: node->second->children)
+                    child->parents_counter = child->parents.size();
 
             throw;
         }
