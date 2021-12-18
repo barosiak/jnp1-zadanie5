@@ -153,17 +153,19 @@ public:
 
     // Removes a virus with given id from the genealogy if possible.
     void remove(typename Virus::id_type const &id) {
-        if (!viruses.contains(id))
-            throw VirusNotFound{};
-        else if (get_stem_id() == id)
+        if (get_stem_id() == id)
             throw TriedToRemoveStemVirus{};
 
         std::vector<typename std::map<typename Virus::id_type,
                     std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
 
         try {
-            auto node = viruses.find(id)->second;
-            nodes_to_delete.push_back(viruses.find(id));
+            auto node_it = viruses.find(id);
+            if (node_it == viruses.end())
+                throw VirusNotFound{};
+
+            auto node = node_it->second;
+            nodes_to_delete.push_back(node_it);
             remove_dfs(node, nodes_to_delete);
 
             for (auto it = node->parents.begin(); it != node->parents.end(); ++it)
