@@ -27,9 +27,9 @@ private:
     struct VirusNode {
         Virus virus;
         std::set<std::shared_ptr<VirusNode>,
-                 std::owner_less<std::shared_ptr<VirusNode>>> children;
+                std::owner_less<std::shared_ptr<VirusNode>>> children;
         std::set<std::weak_ptr<VirusNode>,
-                 std::owner_less<std::weak_ptr<VirusNode>>> parents;
+                std::owner_less<std::weak_ptr<VirusNode>>> parents;
         int parents_counter = 0;
 
         VirusNode(typename Virus::id_type const &id) : virus(id) {};
@@ -51,7 +51,7 @@ private:
     // Helper function, adds to a passed vector iterators of elements to remove.
     void remove_dfs(typename std::shared_ptr<VirusNode> node_it,
                     std::vector<typename std::map<typename Virus::id_type,
-                    std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
+                            std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
 
         for (auto child: (node_it)->children) {
             if (child->parents_counter == 1) {
@@ -158,7 +158,7 @@ public:
             throw TriedToRemoveStemVirus{};
 
         std::vector<typename std::map<typename Virus::id_type,
-                    std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
+                std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
 
         try {
             auto node = viruses.find(id)->second;
