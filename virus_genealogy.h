@@ -198,29 +198,33 @@ public:
     public:
         children_iterator() = default;
 
-        explicit children_iterator(set_iterator_t it) : it(it) {};
+        explicit children_iterator(set_iterator_t it) noexcept : it(it) {};
 
-        Virus const &operator*() const { return (*it)->virus; }
+        Virus const &operator*() const noexcept { return (*it)->virus; }
 
-        Virus *operator->() const { return &(*it)->virus; }
+        Virus *operator->() const noexcept { return &(*it)->virus; }
 
-        constexpr bool operator==(children_iterator const &other) const {
+        constexpr bool operator==(children_iterator const &other) const noexcept {
             return it == other.it;
         }
 
-        children_iterator &operator++() {
+        children_iterator &operator++() noexcept {
             it++;
             return *this;
         }
 
-        children_iterator operator++(int) { return children_iterator(it++); }
+        children_iterator operator++(int) noexcept {
+            return children_iterator(it++);
+        }
 
-        children_iterator &operator--() {
+        children_iterator &operator--() noexcept {
             it--;
             return *this;
         }
 
-        children_iterator operator--(int) { return children_iterator(it--); }
+        children_iterator operator--(int) noexcept {
+            return children_iterator(it--);
+        }
     };
 
     // Returns an iterator to the beginning of children vector
