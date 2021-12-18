@@ -1,5 +1,6 @@
 #include "../virus_genealogy.h"
 
+#include <cassert>
 class Virus {
 public:
 	using id_type = int;
@@ -23,4 +24,7 @@ int main() {
 		g.create(i, {});
 	for(int i = 1; i < n; ++i)
 		g[i];
+
+
+    assert(typeid(*g.get_children_begin(0)) == typeid(const Virus &));
 }

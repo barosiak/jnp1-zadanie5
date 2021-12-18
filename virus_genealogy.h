@@ -19,16 +19,17 @@ struct TriedToRemoveStemVirus : public std::invalid_argument {
     TriedToRemoveStemVirus() : std::invalid_argument("TriedToRemoveStemVirus") {};
 };
 
-// Class representing virus genealogy.
+// Class representing a graph of virus genealogy.
 template<typename Virus>
 class VirusGenealogy {
 private:
+    // Structure representing a virus node in the graph.
     struct VirusNode {
         Virus virus;
         std::set<std::shared_ptr<VirusNode>,
-                std::owner_less<std::shared_ptr<VirusNode>>> children;
+                 std::owner_less<std::shared_ptr<VirusNode>>> children;
         std::set<std::weak_ptr<VirusNode>,
-                std::owner_less<std::weak_ptr<VirusNode>>> parents;
+                 std::owner_less<std::weak_ptr<VirusNode>>> parents;
         int parents_counter = 0;
 
         VirusNode(typename Virus::id_type const &id) : virus(id) {};
@@ -37,6 +38,7 @@ private:
     std::shared_ptr<VirusNode> stem_node;
     std::map<typename Virus::id_type, std::shared_ptr<VirusNode>> viruses;
 
+    // Helper function returning a node of a virus with given id.
     std::shared_ptr<VirusNode> get_node(typename Virus::id_type const &id) const {
         auto it = viruses.find(id);
 
@@ -46,24 +48,17 @@ private:
         return it->second;
     }
 
-    // Helper function for remove, adds iterators of elements to remove to passed vector.
-    //TODO id na shared pointer virusnode
-    //TODO komentarze
-    //TODO klamerki
-    //TODO usun get
-    //TODO p → parent
-    void remove_dfs(typename Virus::id_type const &id,
+    // Helper function, adds to a passed vector iterators of elements to remove.
+    void remove_dfs(typename std::shared_ptr<VirusNode> node_it,
                     std::vector<typename std::map<typename Virus::id_type,
-                            std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
+                    std::shared_ptr<VirusNode>>::iterator> &nodes_to_delete) {
 
-        auto node_it = viruses.find(id);
-
-        for (auto child: (node_it->second)->children) {
-            if (child.get()->parents_counter == 1) {
-                nodes_to_delete.push_back(viruses.find(child.get()->virus.get_id()));
-                remove_dfs(child.get()->virus.get_id(), nodes_to_delete);
+        for (auto child: (node_it)->children) {
+            if (child->parents_counter == 1) {
+                nodes_to_delete.push_back(viruses.find(child->virus.get_id()));
+                remove_dfs(child, nodes_to_delete);
             } else {
-                child.get()->parents_counter--;
+                child->parents_counter--;
             }
         }
     }
@@ -78,26 +73,30 @@ public:
 
     VirusGenealogy &operator=(VirusGenealogy const &) = delete;
 
+    // Returns the id of the stem virus.
     typename Virus::id_type get_stem_id() const {
         return stem_node->virus.get_id();
     }
 
+    // Checks if a virus with given id exists.
     bool exists(typename Virus::id_type const &id) const {
         return viruses.contains(id);
     }
 
+    // Returns a reference to a virus with given id if it exists.
     const Virus &operator[](typename Virus::id_type const &id) const {
         return get_node(id)->virus;
     }
 
+    // Creates a virus with given id and parents if possible.
     void create(typename Virus::id_type const &id,
                 std::vector<typename Virus::id_type> const &parents_ids) {
         if (parents_ids.empty())
             return;
 
         auto virus = std::make_shared<VirusNode>(id);
-        for (auto const &p_id: parents_ids)
-            virus->parents.insert(get_node(p_id));
+        for (auto const &parent_id: parents_ids)
+            virus->parents.insert(get_node(parent_id));
         virus->parents_counter = virus->parents.size();
 
         auto[virus_it, inserted] = viruses.insert({id, virus});
@@ -116,20 +115,24 @@ public:
         }
     }
 
+    // Creates a virus with given id and parent if possible.
     void create(typename Virus::id_type const &id,
                 typename Virus::id_type const &parent_id) {
         create(id, std::vector<typename Virus::id_type>{parent_id});
     }
 
+    // Returns a vector of parents of virus with given id if possible.
     std::vector<typename Virus::id_type>
     get_parents(typename Virus::id_type const &id) const {
         std::vector<typename Virus::id_type> parents_ids;
-        for (auto p: get_node(id)->parents)
-            parents_ids.push_back(p.lock()->virus.get_id());
+
+        for (auto parent: get_node(id)->parents)
+            parents_ids.push_back(parent.lock()->virus.get_id());
 
         return parents_ids;
     }
 
+    // Connects given viruses if possible.
     void connect(typename Virus::id_type const &child_id,
                  typename Virus::id_type const &parent_id) {
 
@@ -147,26 +150,24 @@ public:
         }
     }
 
+    // Removes a virus with given id from the genealogy if possible.
     void remove(typename Virus::id_type const &id) {
-        if (!viruses.contains(id)) {
+        if (!viruses.contains(id))
             throw VirusNotFound{};
-        } else if (get_stem_id() == id) {
+        else if (get_stem_id() == id)
             throw TriedToRemoveStemVirus{};
-        }
 
         std::vector<typename std::map<typename Virus::id_type,
-                std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
+                    std::shared_ptr<VirusNode>>::iterator> nodes_to_delete;
 
         try {
-            auto node_it = viruses.find(id);
-            nodes_to_delete.push_back(node_it);
-            remove_dfs(id, nodes_to_delete);
+            auto node = viruses.find(id)->second;
+            nodes_to_delete.push_back(viruses.find(id));
+            remove_dfs(node, nodes_to_delete);
 
-            //długaśne teraz brzydkie
-            for (auto it = node_it->second->parents.begin();
-                 it != node_it->second->parents.end(); ++it) {
-                it->lock()->children.erase(node_it->second);
-            }
+            for (auto it = node->parents.begin(); it != node->parents.end(); ++it)
+                it->lock()->children.erase(node);
+
         } catch (...) {
             for (auto node: nodes_to_delete)
                 for (auto ch: node->second->children)
@@ -176,14 +177,14 @@ public:
         }
 
         for (auto node: nodes_to_delete) {
-            for (auto child: (node->second)->children) {
-                child.get()->parents.erase(node->second);
-            }
+            for (auto child: (node->second)->children)
+                child->parents.erase(node->second);
 
             viruses.erase(node);
         }
     }
 
+    // Iterator class for children of nodes in virus genealogy.
     class children_iterator
             : public std::iterator<std::bidirectional_iterator_tag, Virus> {
     private:
@@ -219,10 +220,13 @@ public:
         children_iterator operator--(int) { return children_iterator(it--); }
     };
 
+    // Returns an iterator to the beginning of children vector
+    // of a node with given id.
     children_iterator get_children_begin(typename Virus::id_type const &id) const {
         return children_iterator(get_node(id)->children.begin());
     }
 
+    // Returns an iterator to the end of children vector of a node with given id.
     children_iterator get_children_end(typename Virus::id_type const &id) const {
         return children_iterator(get_node(id)->children.end());
     }
